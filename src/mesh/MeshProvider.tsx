@@ -98,6 +98,8 @@ export function MeshProvider({ children }: { children: React.ReactNode }) {
           setIdentity(parsed);
           bootNode(parsed);
         }
+      } catch {
+        // Storage unavailable — continue without persisted identity
       } finally {
         if (!cancelled) setReady(true);
       }
@@ -106,14 +108,20 @@ export function MeshProvider({ children }: { children: React.ReactNode }) {
       cancelled = true;
       teardown();
     };
-  }, [bootNode, teardown]);
+    // Boot once on mount; bootNode/teardown are stable callbacks.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const claimCallsign = useCallback(
     async (callsign: string) => {
       const clean = callsign.trim().replace(/\s+/g, '');
       if (clean.length < 2) throw new Error('Callsign too short');
       const next: Identity = { id: createPeerId(), callsign: clean };
-      await AsyncStorage.setItem(IDENTITY_KEY, JSON.stringify(next));
+      try {
+        await AsyncStorage.setItem(IDENTITY_KEY, JSON.stringify(next));
+      } catch {
+        // Persist is best-effort; mesh still works in-session
+      }
       setIdentity(next);
       setPeers([]);
       setMessages([]);
@@ -124,7 +132,11 @@ export function MeshProvider({ children }: { children: React.ReactNode }) {
   );
 
   const resetIdentity = useCallback(async () => {
-    await AsyncStorage.removeItem(IDENTITY_KEY);
+    try {
+      await AsyncStorage.removeItem(IDENTITY_KEY);
+    } catch {
+      // ignore
+    }
     teardown();
     setIdentity(null);
     setPeers([]);

@@ -1,6 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { Redirect, router } from 'expo-router';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { createElement, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Animated,
@@ -71,6 +71,7 @@ export default function WelcomeScreen() {
   }
 
   const onJoin = async () => {
+    if (busy) return;
     setBusy(true);
     setError(null);
     try {
@@ -78,7 +79,6 @@ export default function WelcomeScreen() {
       router.replace('/mesh');
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not join mesh');
-    } finally {
       setBusy(false);
     }
   };
@@ -90,8 +90,9 @@ export default function WelcomeScreen() {
           style={styles.flex}
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
-          <View style={styles.hero}>
+          <View style={styles.hero} pointerEvents="box-none">
             <Animated.View
+              pointerEvents="none"
               style={[
                 styles.radar,
                 {
@@ -107,7 +108,10 @@ export default function WelcomeScreen() {
                 },
               ]}
             />
-            <Animated.View style={{ opacity: fade, transform: [{ translateY: rise }] }}>
+            <Animated.View
+              pointerEvents="none"
+              style={{ opacity: fade, transform: [{ translateY: rise }] }}
+            >
               <Text style={styles.brand}>Relay</Text>
               <Text style={styles.headline}>Chat across devices when the internet drops.</Text>
               <Text style={styles.support}>
@@ -129,23 +133,22 @@ export default function WelcomeScreen() {
                 placeholder="CedarFox-42"
                 placeholderTextColor={colors.mute}
                 style={styles.input}
+                onSubmitEditing={() => {
+                  void onJoin();
+                }}
+                returnKeyType="go"
               />
               <Pressable
                 onPress={() => setCallsign(suggestCallsign())}
                 style={styles.shuffle}
+                accessibilityRole="button"
                 accessibilityLabel="Suggest callsign"
               >
                 <Text style={styles.shuffleText}>↻</Text>
               </Pressable>
             </View>
             {error ? <Text style={styles.error}>{error}</Text> : null}
-            <Pressable
-              onPress={onJoin}
-              disabled={busy}
-              style={({ pressed }) => [styles.cta, (pressed || busy) && styles.ctaPressed]}
-            >
-              <Text style={styles.ctaText}>{busy ? 'Joining…' : 'Enter the mesh'}</Text>
-            </Pressable>
+            <JoinButton busy={busy} onPress={onJoin} />
             <Text style={styles.footnote}>
               Demo radios are simulated on-device. Open a second browser tab to mesh with a real
               peer over BroadcastChannel.
@@ -154,6 +157,55 @@ export default function WelcomeScreen() {
         </KeyboardAvoidingView>
       </SafeAreaView>
     </LinearGradient>
+  );
+}
+
+function JoinButton({ busy, onPress }: { busy: boolean; onPress: () => void | Promise<void> }) {
+  const label = busy ? 'Joining…' : 'Enter the mesh';
+
+  if (Platform.OS === 'web') {
+    return createElement(
+      'button',
+      {
+        type: 'button',
+        disabled: busy,
+        onClick: () => {
+          void onPress();
+        },
+        'aria-label': 'Enter the mesh',
+        style: {
+          marginTop: 8,
+          backgroundColor: colors.ink,
+          borderRadius: 14,
+          paddingTop: 16,
+          paddingBottom: 16,
+          borderWidth: 0,
+          borderStyle: 'none',
+          width: '100%',
+          cursor: busy ? 'wait' : 'pointer',
+          fontFamily: 'SpaceGrotesk_600SemiBold, system-ui, sans-serif',
+          color: colors.white,
+          fontSize: 16,
+          fontWeight: 600,
+          opacity: busy ? 0.88 : 1,
+        },
+      },
+      label,
+    );
+  }
+
+  return (
+    <Pressable
+      onPress={() => {
+        void onPress();
+      }}
+      disabled={busy}
+      accessibilityRole="button"
+      accessibilityLabel="Enter the mesh"
+      style={({ pressed }) => [styles.cta, (pressed || busy) && styles.ctaPressed]}
+    >
+      <Text style={styles.ctaText}>{label}</Text>
+    </Pressable>
   );
 }
 
@@ -171,6 +223,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.xl,
     gap: spacing.md,
+    overflow: 'hidden',
   },
   radar: {
     position: 'absolute',
@@ -209,6 +262,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.xl,
     gap: spacing.sm,
+    zIndex: 2,
   },
   label: {
     fontFamily: 'IBMPlexMono_500Medium',
