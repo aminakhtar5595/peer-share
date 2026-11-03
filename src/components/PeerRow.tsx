@@ -57,6 +57,7 @@ const styles = StyleSheet.create({
     borderRadius: 21,
     alignItems: 'center',
     justifyContent: 'center',
+    flexShrink: 0,
   },
   avatarOn: {
     backgroundColor: colors.teal,
@@ -71,6 +72,7 @@ const styles = StyleSheet.create({
   },
   meta: {
     flex: 1,
+    minWidth: 0,
     gap: 2,
   },
   name: {
@@ -87,5 +89,6 @@ const styles = StyleSheet.create({
     fontFamily: 'SpaceGrotesk_500Medium',
     color: colors.teal,
     fontSize: 18,
+    flexShrink: 0,
   },
 });
