@@ -1,0 +1,37 @@
+{
+  "expo": {
+    "name": "Relay",
+    "slug": "relay-mesh-chat",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "relay",
+    "userInterfaceStyle": "light",
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      "expo-splash-screen"
+    ],
+    "experiments": {
+      "typedRoutes": false
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.portfolio.relay"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#E8F2F0",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "package": "com.portfolio.relay",
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    }
+  }
+}
